@@ -128,13 +128,13 @@ This task is typical note task with glibc2.31.
 This binary using tcache in glibc2.31, I planed to get libc address by freeing large chunk. (> 0x410)   
 Just forging size header to "0x611" using "write note #0 title".  
 
-![leak](/asset/notes/about_leak.png)
+![leak](/assets/notes/about_leak.png)
 
 2. Overwrite
 When overlap chunk has been created, we can now create fake chunk to edit one of existing chunk. I choose note #30 to edit.  
 Then I edit `__free_hook` through "edit note #30".  
 
-![overwrite](/asset/notes/about_overwrite_fp.png)
+![overwrite](/assets/notes/about_overwrite_fp.png)
 
 Final exploit is here. 
 ```python
@@ -259,4 +259,4 @@ flag.txt
 $ cat f*
 CSCML2020{I_have_not_failed_Ive_just_found_10000_ways_that_wont_work}
 ```
-![fb][/asset/notes/fb.png]
+![fb](/assets/notes/fb.png)
