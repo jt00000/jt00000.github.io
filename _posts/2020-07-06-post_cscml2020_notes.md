@@ -130,7 +130,7 @@ Just forging size header to "0x611" using "write note #0 title".
 
 ![leak](/assets/notes/about_leak.png)
 
-2. Overwrite
+2. Overwrite  
 When overlap chunk has been created, we can now create fake chunk to edit one of existing chunk. I choose note #30 to edit.  
 Then I edit `__free_hook` through "edit note #30".  
 
