@@ -10,7 +10,7 @@ This task is typical note task with glibc2.31.
 
 #### Reverse part
 - I dont know why, but we just can't fully decompile this binary. So we have to analyze this from dissasembled one.
-- By reading and playing with the code, I found that writing function useing fixed size(0x20)
+- By reading and playing with the code, I found that "write note" function always use fixed size(0x20).
     - line 101624, 101641: These lines show that here is "create note" part.
     - line 101689 ~ 1016a0: calloc("scanf output", 1)
     - line 1016fe ~ 10170a: fgets("titile buffer", 0x20)
@@ -121,7 +121,7 @@ This task is typical note task with glibc2.31.
 | content addr | 8 |
 | content length | 8 |
 
-- Plan is simple. Modify heap header and overlap note chunks and overwrite it. We have to fill Tcache  because this binary uses calloc instead of malloc.
+- Plan is simple. Modify heap header and overlap note chunks and overwrite it. One point to care is that we have to fill the Tcache  because this binary uses calloc instead of malloc.
 
 #### Pwn part
 1. Leak  
@@ -137,7 +137,7 @@ Then I edit `__free_hook` through "edit note #30".
 ![overwrite](/asset/notes/about_overwrite_fp.png)
 
 Final exploit is here. 
-```
+```python
 from pwn import *
 # context.log_level = 'debug'
 context.arch = 'amd64'
