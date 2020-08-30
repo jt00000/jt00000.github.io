@@ -8,7 +8,7 @@ date: 2020-08-30 00:00:00 -0000
 
 I participated in GoogleCTF2020 as PwnaSonic and I solved 2 REV task. (beginner, sprint)
 
-This task `sprint` is very fun one and I really enjoyed. So I decide to write this. 
+This task `sprint` is very fun one and I really enjoyed playing. So I decide to write this. 
 
 ---
 
@@ -186,16 +186,16 @@ Point #1: Stack values are used as register.
 - `%3` is like instruction pointer(IP) and `%4 ~ %23` are registers. 
 - Even number is for reference(=for read), Odd number is for dereference(=for write). Except`%4`(as *reg0 write) and `%5`(as *reg0 read and reg0 write).
 
-![stack](/asset/sprint/01.png)
+![stack](/assets/sprint/01.png)
 
 Point #2: There are 2 forms in format strings.  
 - form 1 is mov. 
 
-![form1](/asset/sprint/02.png)
+![form1](/assets/sprint/02.png)
 
 - form 2 is jnz.
 
-![form2](/asset/sprint/03.png)
+![form2](/assets/sprint/03.png)
 
 With these knowledge, I disassembled all instructions by hand. (because im stupid :p)
 
@@ -274,6 +274,7 @@ Second part is check input length is 254 or not.
 Third part is the main and most interesting one.  
 
 - First, build MAP with this code.
+
 ```
 # ARRAY: 256 sized array with array[i] is (0: i is prime, 1: i is not prime) (located at 0x4007000)
 # RANDOM: given 256 random bytes. (located at 0x400f000)
@@ -314,7 +315,7 @@ Our initial position is 0x11. (described at 0x400f100)
 
 Finally I wrote map and check route. Correct input is `ddrrrrrrddrrrrrrrrddllrruullllllllddddllllllddddrrrrrrrruurrddrrddrrlluulluullddlllllllluuuurrrrrruuuuuulllllldduurrrrrrddddddllllllddddrrrrrruuddlllllluuuuuurruuddllddrrrrrruuuurrrrrruurrllddllllllddddllllllddddrrddllrruulluuuurrrrrruullrruurruuuurrrrrr` and you will get flag.
 
-![map](/asset/sprint/04.png)
+![map](/assets/sprint/04.png)
 
 Here is map script.
 
