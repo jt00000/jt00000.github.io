@@ -27,7 +27,8 @@ twitter_username: sshckk
 github_username: jt00000
 
 # Build settings
-theme: jekyll-theme-midnight
+# theme: jekyll-theme-midnight
+theme: minima
 plugins:
   - jekyll-feed
 
