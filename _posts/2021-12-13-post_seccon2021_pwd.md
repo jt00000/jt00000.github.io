@@ -167,26 +167,36 @@ def main():
 
 今回のプログラムでは`/tmp`でファイルを作ってコンパイル、実行したら消すという動作だったので、デバッグ用に問題プログラムを改造します。
 
-```diff
-641a642
->     '''
-647a649
->     '''
-650c652
-<             urllib.request.urlopen(url) as fpy
----
->             # urllib.request.urlopen(url) as fpy
-652c654,657
-<         code = fpy.read().decode("utf-8")
----
->         # code = fpy.read().decode("utf-8")
->         with open('./test.txt', 'r') as f:
->             code = f.read()
-> 
-663a669
->         subprocess.run(["cp", fasm.name, "/home/ctf/seccon2021/pyast/generated"])
-669a676
->         subprocess.run(["cp", fasm.name + ".elf", "/home/ctf/seccon2021/pyast/generated.elf"])
+```python
+if __name__ == '__main__':
+    MAX_SIZE = 10000
+    '''
+    print("[Tips] You can use https://transfer.sh/ if you don't have your own server.")
+    url = input("URL: ")
+    if not url.startswith("http"):
+        print("[-] Bad URL")
+        exit(1)
+
+    '''
+    with (
+            tempfile.NamedTemporaryFile('w') as fasm,
+            # urllib.request.urlopen(url) as fpy
+    ):
+        # code = fpy.read().decode("utf-8")
+        with open('./test.txt', 'r') as f:
+            code = f.read()
+```
+
+```python
+        subprocess.run(["cp", fasm.name, "/home/ctf/seccon2021/pyast/generated"])
+        subprocess.run(["gcc",
+                        "-xassembler", "-nostdlib", "-nodefaultlibs",
+                        "-z", "noexecstack", "-pie",
+                        fasm.name, "-o", fasm.name+'.elf'],
+                       cwd="/tmp")
+        subprocess.run([fasm.name + ".elf"])
+        subprocess.run(["cp", fasm.name + ".elf", "/home/ctf/seccon2021/pyast/generated.elf"])
+        subprocess.run(["rm", fasm.name + ".elf"])
 ```
 
 これで`generated.elf`をgdbに入れてデバッグできます。配列`a1`が伸びているのが分かります。
@@ -298,7 +308,7 @@ def exp():
     a1[18] = 0xdead
 ```
 
-ripが0xdeadで止まれば成功です。あとはROPを作るだけです。`push`命令で4バイトより大きい値を入れられないため、`/bin/sh\x00`の文字列を作るのに一工夫いります。工夫の仕方を知らないのでreadを使いましたが、普通に計算できるようです。ありがとう想定解。最後は以下のようなコードになりました。
+ripが0xdeadで止まれば成功です。あとはROPを作るだけです。`push`命令で4バイトより大きい値を入れられないため、`/bin/sh\x00`の文字列を作るのに一工夫いります。工夫の仕方を知らないのでreadを使いましたが、普通に計算できるようです。ありがとう想定解。最後は以下のようなコードになりました。スタックへのポインタを`a0[5]`から取ってきて、配列長を変更して用済みになった変数`a1_header`を、文字列の格納先を指すポインタにしました。
 
 ```python
 def main():
