@@ -60,87 +60,9 @@ pwn1問解いて、rev1問手伝って終わりました。
 
 配列の参照や代入の部分にもこれに合わせた変更があります。canaryの値を確認し、配列長を確認し、範囲内であれば値の参照、代入を行います。
 
-```python
-    def visit_Assign(self, node):
-        # Only supports assignment of (a single) local variable
-        assert len(node.targets) == 1, \
-            'can only assign one variable at a time'
-        self.visit(node.value)
-        target = node.targets[0]
-        if isinstance(target, ast.Subscript):
-            # array[offset] = value
-            self.visit(target.slice) # Modified for Python 3.9
-            self.asm.instr('popq', '%rax')
-            self.asm.instr('popq', '%rbx')
-            local_offset = self.local_offset(target.value.id)
-            self.asm.instr('movq', '{}(%rbp)'.format(local_offset), '%rdx')
-            # Make sure the target variable is array
-            self.asm.instr('mov', '4(%rdx)', '%edi')
-            self.asm.instr('mov', '%fs:0x2c', '%esi')
-            self.asm.instr('cmp', '%edi', '%esi')
-            self.asm.instr('jnz', 'trap')
-            # Bounds checking
-            self.asm.instr('mov', '(%rdx)', '%ecx')
-            self.asm.instr('cmpq', '%rax', '%rcx')
-            self.asm.instr('jbe', 'trap')
-            # Store the element
-            self.asm.instr('movq', '%rbx', '8(%rdx,%rax,8)')
-        else:
-            # variable = value
-            offset = self.local_offset(node.targets[0].id)
-            self.asm.instr('popq', '{}(%rbp)'.format(offset))
-```
-
-こちらが参照。
-
-```python
-    def visit_Subscript(self, node):
-        self.visit(node.slice) # Modified for Python 3.9
-        self.asm.instr('popq', '%rax')
-        local_offset = self.local_offset(node.value.id)
-        self.asm.instr('movq', '{}(%rbp)'.format(local_offset), '%rdx')
-        # Make sure the target variable is array
-        self.asm.instr('mov', '4(%rdx)', '%edi')
-        self.asm.instr('mov', '%fs:0x2c', '%esi')
-        self.asm.instr('cmp', '%edi', '%esi')
-        self.asm.instr('jnz', 'trap')
-        # Bounds checking
-        self.asm.instr('mov', '(%rdx)', '%ecx')
-        self.asm.instr('cmpq', '%rax', '%rcx')
-        self.asm.instr('jbe', 'trap')
-        # Load the element
-        self.asm.instr('pushq', '8(%rdx,%rax,8)')
-```
-
 つまり`a=array(10)`で配列を作った後に`a[-1]`や`a[10]`にはアクセスできず、TRAPが発行されて実行が止まってしまいます。
 
 また表示と入力に`putc`, `getc`が存在しますが、どちらもassignで64ビット整数中の8ビットに入力、出力をするものになってしまい、まともに使えるようには見えません。rbpを1つずつずらせるようなバグがあるのかなと思っていました。
-
-```python
-    def compile_putc(self):
-        # Insert this into every program so it can call putc() for output
-        self.asm.label('putc')
-        self.compile_enter()
-        self.asm.instr('movl', '$1', '%eax')            # write (for Linux)
-        self.asm.instr('movl', '$1', '%edi')            # stdout
-        self.asm.instr('movq', '%rbp', '%rsi')          # address
-        self.asm.instr('addq', '$16', '%rsi')
-        self.asm.instr('movq', '$1', '%rdx')            # length
-        self.asm.instr('syscall')
-        self.compile_return(has_arrays=False)
-
-    def compile_getc(self):
-        # Insert this into every program so it can call getc() for input
-        self.asm.label('getc')
-        self.compile_enter()
-        self.asm.instr('xor', '%eax', '%eax')           # read (for Linux)
-        self.asm.instr('xor', '%edi', '%edi')           # stdin
-        self.asm.instr('lea', '-1(%rbp)', '%rsi')       # address
-        self.asm.instr('movq', '$1', '%rdx')            # length
-        self.asm.instr('syscall')
-        self.asm.instr('movb', '-1(%rbp)', '%al')       # address
-        self.compile_return(has_arrays=False)
-```
 
 競技時間中１つだけ気づいたことは、`a=array(10)`のあと、`putc(a)`とやると、配列のアドレスをさしていることに気づきました。`a += 1`などとやると配列のアドレスを変更することができます。これを利用しながらputc、getcでちまちま読み書きするのかと思いましたが、どちらにしてもチャンクのヘッダがそろっていないと何もできず、そのままでは使えません。ここで時間切れでした。
 
