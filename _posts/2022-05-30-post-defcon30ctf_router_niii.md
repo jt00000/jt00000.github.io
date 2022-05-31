@@ -81,3 +81,5 @@ Firmware upgrade message: FLAG{if_stack_grows_horizontally_pc_can_totally_be_ran
 作成したスクリプトは[ここ](https://github.com/jt00000/ctf.writeup/blob/master/defcon30qual/router-niii/solve.py)
 
 pwnではないようにも思いますが、応援係りから昇格できたので良かったです。
+
+(5/31追記) 後からコードをよく見ると、デバッグ用に重複チェックの関数をreturnにしたままだったのを発見。実はお構いなしに投げていたようでした。運がよかったです。
