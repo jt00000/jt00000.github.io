@@ -1,6 +1,6 @@
 ---
 layout: page
-title: "defcon30ctf qual - router niii"
+title: "defcon30ctf qual - router-niii"
 date: 2022-05-30 00:00:00 -0000
 ---
 
@@ -74,9 +74,7 @@ with open('./edit', 'wb') as f:
 
 ポチポチしていると、フラグが表示されました。いまだ！アップロード！！（朝5時）
 
-```
-Firmware upgrade message: FLAG{if_stack_grows_horizontally_pc_can_totally_be_random!} ллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллл Oops Firmware upgrade completed. The new firmware will function once the router reboots. 
-```
+![](/assets/dc30router/f.png)
 
 作成したスクリプトは[ここ](https://github.com/jt00000/ctf.writeup/blob/master/defcon30qual/router-niii/solve.py)
 
