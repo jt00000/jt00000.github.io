@@ -1,7 +1,7 @@
 ---
 layout: page
 title: "pbctf2023 flipjump 1, 1.5, 2"
-date: 2023-02-22 00:00:00 -0000
+date: 2023-02-21 00:00:00 -0000
 ---
 
 flipjumpというesolang（https://esolangs.org/wiki/FlipJump）の問題です。
