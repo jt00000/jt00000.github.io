@@ -1,16 +1,16 @@
 ---
 layout: page
-title: "Sekai CTF 2023 Algorithm Multitool"
+title: "Sekai CTF 2023 Algorithm Multitool [EN]"
 date: 2023-09-03 00:00:00 -0000
 ---
 
 - Source file is at [here](https://github.com/project-sekai-ctf/sekaictf-2023/blob/main/pwn/algorithm-multitool/challenge/multitool.cpp).
 - My solver script is [here](https://github.com/jt00000/ctf.writeup/blob/5290c0d2d002597ca8ef5e8f5663c227e95d4da5/sekai2023/multi/solve.py).
-- TLDR: [Do not use capturing lambdas that are coroutines](https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines#Rcoro-capture)
+- TLDR: This is ctf task using c++20 coroutine. Bug is at lambda+coroutine part. [Do not use capturing lambdas that are coroutines](https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines#Rcoro-capture). Use this bug and vector resize to turn this uaf to rce.
 
 Here is my writeup for Algorithm Multitool.
 
-# coroutine: How it works
+# Check coroutine function
 
 A coroutine is an object that can suspend the action of a function and retain its state. A function that has `co_await` or `co_return` inside becomes a coroutine function, which has a state inside and changes its behavior each time it is called.
 
@@ -76,7 +76,7 @@ The actual memory of the coroutine handle is as follows.
 - +0x28: state, etc. 2 bytes for `state`, next 1 byte, 1 byte for some flag
 
 # Algorithm Multitool: the bug
-The next is the bug in this problem. Here you can use coroutines to create, run, and delete tasks that run multiple algorithms.
+The next is the bug in this problem. Here you can use coroutines to create, `resume`, and `delete` multiple algorithms.
 
 As for the bug, the source is reposted, but the bug is that the argument is captured in the following lambda. [ref](https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines#Rcoro-capture)
 
@@ -94,7 +94,7 @@ auto slow_algo_factory(SlowAlgo* algo)
 }
 ```
 
-The Task struct `h` holds its address ignoring the lifetime of `algo_l`, so after the first call `algo_l` becomes dangling. You can replace the pointer in `algo_l` using another function.
+The Task struct `h` keeps holding the address of `algo_l`, so after the first call `algo_l` becomes dangling. You can replace the pointer of `algo_l` using another function.
 
 # Exploit development
 For tasks created using `slow_algo_factory`, `run_algo_async` operates on the first `resume` and `get_result` operates on the second `resume`. You need to use these and the `algo_l` replacements to build your exploit.
@@ -168,7 +168,7 @@ The important thing is to replace the stack variable `algo_l`, but in this probl
 1. When you create task A using `slow_algo_factory` and `resume` another task B, the `algo_l` comes from task A.
 2. When you `destroy` task A and `resume` another task B, the pointer to the address where the Task structure of the deleted task A was located is called as `algo_l`. (To be exact, the return value of `tasks.begin()+index` used in the `destroy` path)
 
-We want to use 2., which allows us to freely replace values. We can't generate tasks using `slow_algo_factory` because of 1., but `fast_algo_factory` generates tasks in the same way, but there is no effect due to the difference in stack depth, so we can use this.
+We want to use 2., which allows us to freely replace values. We can't generate task using `slow_algo_factory` because of 1., but `fast_algo_factory` generates tasks in the same way, but there is no effect due to the difference in stack depth, so we can use this.
 
 As for the idea of ​​heap editing, the pointer in 2. points the address of inside the vector called `tasks`. Therefore, by increasing the size by increasing the number of `tasks`, it will be resized and the chunk that looks good will be used by `tasks`, or conversely, the original chunk can be used.
 
@@ -196,7 +196,7 @@ Amount to calculate: 13
 0x555555579030: 0x0000000000000000      0x0000000000000091
 ```
 
-Create this structure first, free it, then extend tasks and reacquire this address. Then call `resume` --> `destroy` --> `resume` to use this chunk as `algo_l`.
+Create this structure first, free it, then extend `tasks` and reacquire this address. Then call `resume` --> `destroy` --> `resume` to use this chunk as `algo_l`.
 
 The script leading up to the leak is as follows. (Each python function only contains parameters, so it is omitted for now)
 
@@ -250,7 +250,7 @@ The entire Fibonacci Algo structure leaks. I think libc will also leak if the in
 ```
 ## Exploit development: RIP control part
 Next, use `run_algo_async` to capture RIP.
-This time, unlike before, a pointer with offset +0 is used, so pointing to valid tasks is troublesome. Therefore, first call `destroy`, then resize to move the tasks, rewrite the original tasks pointer location, and then `resume` to run it pointing to the location where the old tasks were. After resize, use `fast_algo_factory` to input the payload.
+This time, unlike before, a pointer with offset +0 is used, so pointing to valid tasks is troublesome. Therefore, first call `destroy`, then resize to move the `tasks`, rewrite the original `tasks` pointer location, and then `resume` to run it pointing to the location where the old `tasks` were. After resize, use `fast_algo_factory` to input the payload.
 
 The first resize frees the size of 0x90, but it was a little difficult to use, so I aimed for the next size of 0x110.
 
