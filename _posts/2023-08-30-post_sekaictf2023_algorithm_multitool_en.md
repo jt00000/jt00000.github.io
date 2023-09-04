@@ -72,7 +72,7 @@ The actual memory of the coroutine handle is as follows.
 - +0: slow_algo_factory(SlowAlgo*)::{lambda()#1}::operator()(slow_algo_factory(SlowAlgo*)::{lambda()#1}::operator()() const::_ZZ17slow_algo_factoryP8SlowAlgoENKUlvE_clEv.Frame*) [clone .actor]
 - +8: slow_algo_factory(SlowAlgo*)::{lambda()#1}::operator()(slow_algo_factory(SlowAlgo*)::{lambda()#1}::operator()() const::_ZZ17slow_algo_factoryP8SlowAlgoENKUlvE_clEv.Frame*) [clone .destroy]
 - +0x18: a pointer to itself
-- +0x20: Captured address of `algo_l` variable
+- +0x20: Address of captured value `algo_l`
 - +0x28: state, etc. 2 bytes for `state`, next 1 byte, 1 byte for some flag
 
 # Algorithm Multitool: the bug
@@ -200,7 +200,7 @@ Create this structure first, free it, then extend `tasks` and reacquire this add
 
 The script leading up to the leak is as follows. (Each python function only contains parameters, so it is omitted for now)
 
-When adding the 10th task, the size of the `tasks` chunk will change from 0x50 to 0x90, so free the coinchange task in advance, add the 10th task, cause resize, and go to this chunk. By moving it and then `destroying' the 4th algorithm, we can read the pointer at +0x48 from the chunk and get the leak.
+When adding the 10th task, the size of the `tasks` chunk will change from 0x50 to 0x90, so free the coinchange task in advance, add the 10th task, cause resize, and go to this chunk. By moving it and then `destroying` the 4th algorithm, we can read the pointer at +0x48 from the chunk and get the leak.
 
 ```python
 coin([0x1111]*180, 0xbeef) # large chunk for leak
