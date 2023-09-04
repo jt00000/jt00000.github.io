@@ -224,7 +224,7 @@ destroy(4) # corrupt algo_l
 resume(6) # resume again
 ```
 
-The entire Fibonacci Algo structure leaks. I think libc will also leak if the initial coinchange array is made larger, but it is not necessary this time.
+And we got leak around Algo structure. I think libc will also leak if the initial coinchange array is made larger, but it is not necessary this time.
 
 ```
     b'Resume task #: '
