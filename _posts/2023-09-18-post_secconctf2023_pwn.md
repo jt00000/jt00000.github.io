@@ -1,10 +1,10 @@
 ---
 layout: page
 title: "SECCON CTF 2023 pwn"
-date: 2023-11-28 00:00:00 -0000
+date: 2023-09-18 00:00:00 -0000
 ---
 
-かなり時間がかかりましたが、ようやく一通り触れられたのでまとめました。競技時間中はukqmemoとblackout以外が解けました。どの問題もおもしろかったです。
+9月開催の今は11月末で、かなり時間がかかりましたが、ようやく一通り触れられたのでまとめました。競技時間中はukqmemoとblackout以外が解けました。どの問題もおもしろかったです。
 
 # selfcet
 [CET](https://gigazine.net/news/20200616-intel-cet-bring-tiger-lake/)を自前実装しているバイナリの問題です。forward edgeだけ実装されています。
