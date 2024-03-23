@@ -1,7 +1,7 @@
 ---
 layout: page
 title: "KalmarCTF 2024 Symmetry 1, 2, 3 [EN]"
-date: 2024-03-23 00:00:00 -0000
+date: 2024-03-22 00:00:00 -0000
 ---
 
 This is a three-part problem using the same binary.
