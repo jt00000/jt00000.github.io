@@ -716,6 +716,10 @@ unsigned __int64 __fastcall clean(__int64 cont_vec, __int64 size_vec)
 }
 ```
 
+What happens if the second chunk is missed? The answer is `double free`.
+
+If there is a chunk of size -1 before the freed chunk, this chunk will not disappear from the vector and will be able to free the chunk again.
+
 Before clean:
 ```
 chunk0(size: 10)
@@ -740,11 +744,6 @@ chunk0(size: 10)
 chunk4(size: -1) <--- we can free this again
 chunk5(size: 10)
 ```
-
-
-What happens if the second chunk is missed? The answer is `double free`.
-
-If there is a chunk of size -1 before the freed chunk, this chunk will not disappear from the vector and will be able to free the chunk again.
 
 We exploit this to arbitrary address allocation, leak the stack address, and send an ROP.
 
