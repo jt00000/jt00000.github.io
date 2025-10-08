@@ -33,8 +33,8 @@ Dump of assembler code for function _IO_wdoallocbuf:
    0x000073dc5c45d524 <+20>:    mov    rbx,rdi 
    0x000073dc5c45d527 <+23>:    test   BYTE PTR [rdi],0x2
    0x000073dc5c45d52a <+26>:    jne    0x73dc5c45d5a0 <_IO_wdoallocbuf+144>
-   0x000073dc5c45d52c <+28>:    mov    rax,QWORD PTR [rax+0xe0]
-   0x000073dc5c45d533 <+35>:    call   QWORD PTR [rax+0x68] // <-- _wide_data->_code_cvt
+   0x000073dc5c45d52c <+28>:    mov    rax,QWORD PTR [rax+0xe0] // <-- _wide_data->vtable
+   0x000073dc5c45d533 <+35>:    call   QWORD PTR [rax+0x68] // <-- _wfile_doallocate
 ```
 
 あとはここに入るようにいい感じに変数を調整すれば良いです。上手く関数ポインタまで行ったあとは、今回はraxが使いにくかったので、COP２つで調整しました。
